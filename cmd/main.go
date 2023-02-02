@@ -18,8 +18,11 @@ func main() {
 	//Example 1
 	cmd := Test{}
 	errCh := ctrl.ExecASync(context.Background(), &cmd)
+	println("wait ASync")
 
 	err := <-errCh
+
+	println("receive ASync")
 
 	if err != nil {
 		panic(err)

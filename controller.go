@@ -131,6 +131,7 @@ func (c *ControllerImpl) Exec(ctx context.Context, args interface{}) error {
 
 // ExecASync implements Controller.Exec by routing args for specific handler or
 // returning ErrHandlerNotFound with ASync
+// Chan will be closed after send
 func (c *ControllerImpl) ExecASync(ctx context.Context, args interface{}) chan error {
 
 	ch := make(chan error, 1)
