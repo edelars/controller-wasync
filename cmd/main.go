@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	controller "controller-wasync"
+	"github.com/edelars/controller-wasync"
 )
 
 func main() {
