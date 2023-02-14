@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"runtime/debug"
 )
 
 type ErrHandlerNotFound struct {
@@ -113,7 +114,18 @@ func (c ControllerImpl) Handlers() []HandlerSpec {
 
 // Exec implements Controller.Exec by routing args for specific handler or
 // returning ErrHandlerNotFound
-func (c *ControllerImpl) Exec(ctx context.Context, args interface{}) error {
+func (c *ControllerImpl) Exec(ctx context.Context, args interface{}) (e error) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch err := r.(type) {
+			case error:
+				e = fmt.Errorf("panic recovered: %w, %s", err, string(debug.Stack()))
+			default:
+				e = fmt.Errorf("untyped panic recovered: %v, %s", r, string(debug.Stack()))
+			}
+		}
+	}()
+
 	argsType := reflect.TypeOf(args)
 	handler, ok := c.handlers[argsType]
 	if !ok {
@@ -138,6 +150,16 @@ func (c *ControllerImpl) ExecASync(ctx context.Context, args interface{}) chan e
 
 	go func() {
 		defer close(ch)
+		defer func() {
+			if r := recover(); r != nil {
+				switch err := r.(type) {
+				case error:
+					ch <- fmt.Errorf("panic recovered: %w, %s", err, string(debug.Stack()))
+				default:
+					ch <- fmt.Errorf("untyped panic recovered: %v, %s", r, string(debug.Stack()))
+				}
+			}
+		}()
 		ch <- c.Exec(ctx, args)
 	}()
 
